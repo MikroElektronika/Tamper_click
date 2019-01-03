@@ -1,0 +1,90 @@
+'
+'Example for Tamper Click
+'
+'    Date          : Nov 2017.
+'    Author        : MikroE Team
+'
+'Test configuration STM32 :
+'    
+'    MCU              : STM32F107VCT6
+'    Dev. Board       : EasyMx PRO v7 for STM32
+'    ARM Compiler ver : v5.1.0.0
+'
+'---
+'
+'Description :
+'
+'The application is composed of three sections :
+'
+' - System Initialization - GPIO and UART initialization  
+' - Application Initialization - Sends HAL pointers 
+' - Application Task - Detects ON state of Tamper click 
+'
+'Additional Functions :
+'
+'-   
+'-
+'
+'
+program Click_Tamper_STM
+
+include Click_Tamper_types
+
+
+sub function  getINT() as uint8_t 
+
+    result = GPIOD_IDR.B10 
+
+end sub
+
+typedef  T_hal_gpioGetFp   as sub function() as uint8_t
+typedef T_hal_gpioSetFp  as sub procedure(dim state as uint8_t)
+
+typedef T_gpio_setFp_           as ^T_hal_gpioSetFp
+typedef T_gpio_getFp_           as ^T_hal_gpioGetFp
+
+    
+    structure T_hal_gpioObj
+        dim gpioSet as T_gpio_setFp_[12]
+        dim gpioGet as T_gpio_getFp_[12]
+    end structure
+    
+const
+    GPIO_BUS as T_hal_gpioObj = ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, @getINT, 0, 0, 0, 0))
+    
+
+
+sub procedure systemInit() 
+
+    GPIO_Digital_Input(@GPIOD_BASE, _GPIO_PINMASK_10) 
+    UART1_Init(9600) 
+    Delay_ms(100) 
+
+end sub
+
+sub procedure applicationInit() 
+
+    tamper_gpioDriverInit(T_TAMPER_P(@GPIO_BUS)) 
+
+end sub
+
+sub procedure applicationTask() 
+
+    if (tamper_getState()) then 
+        UART1_Write_text("Tamper click is in ON state.")
+		UART1_Write(13)
+		UART1_Write(10)
+    end if
+    Delay_ms(200) 
+
+end sub
+
+main :
+
+    systemInit() 
+    applicationInit() 
+    while (1) 
+        applicationTask() 
+    wend
+
+end.

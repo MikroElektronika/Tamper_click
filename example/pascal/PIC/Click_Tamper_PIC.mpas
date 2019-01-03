@@ -1,0 +1,96 @@
+{*
+Example for Tamper Click
+
+    Date          : Nov 2017.
+    Author        : MikroE Team
+
+Test configuration PIC :
+    
+    MCU             : P18F87K22
+    Dev. Board      : EasyPIC PRO v7
+    PIC Compiler ver : v7.1.0.0
+
+---
+ Description :
+
+The application is composed of three sections :
+
+ - System Initialization - GPIO and UART initialization 
+ - Application Initialization - Sends HAL pointers
+ - Application Task - Detects ON state of Tamper click
+
+Additional Functions :
+
+-   
+-
+
+*}
+program Click_Tamper_PIC;
+function  getINT() :  uint8_t; 
+begin
+
+    result := PORTB.B0; 
+
+end;
+uses Click_Tamper_types, Click_Tamper_config, __tamper_driver;
+
+type T_hal_gpioSetFp = procedure( state : uint8_t );
+type T_hal_gpioGetFp = function() : uint8_t;
+
+type
+        T_hal_gpioObj = record 
+        gpioSet : array[12] of ^T_hal_gpioSetFp;
+        gpioGet : array[12] of ^T_hal_gpioGetFp;
+    end;
+    
+const
+    GPIO_BUS : T_hal_gpioObj = ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, @getINT, 0, 0, 0, 0)); 
+    
+var
+    Tamper_STATE : sbit at PORTB.B0; 
+    Tamper_STATE_Direction : sbit at TRISB.B0; 
+    
+
+
+procedure systemInit(); 
+begin
+
+    ANCON0 := 0x00; 
+    ANCON1 := 0x00; 
+    ANCON2 := 0x00; 
+    Tamper_STATE_Direction := 1; 
+    UART1_Init(9600); 
+    Delay_ms(100); 
+
+end;
+
+procedure applicationInit(); 
+begin
+
+    tamper_gpioDriverInit(T_TAMPER_P(@GPIO_BUS)); 
+
+end;
+
+procedure applicationTask(); 
+begin
+
+    if (tamper_getState()) then 
+    begin
+        UART1_Write_text('Tamper click is in ON state.'); 
+		UART1_Write(13);
+		UART1_Write(10);
+    end; 
+    Delay_ms(200); 
+
+end;
+
+begin
+
+    systemInit(); 
+    applicationInit(); 
+    while (1) do 
+    begin 
+        applicationTask(); 
+    end;
+
+end.

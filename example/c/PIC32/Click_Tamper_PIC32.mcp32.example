@@ -1,0 +1,16 @@
+[DEVICE]
+Name=P32MX795F512L
+Clock=80000000
+[BUILD_TYPE]
+Value=0
+[FILES]
+Count=1
+File0=Click_Tamper_PIC32.c
+[HEADERS]
+Count=2
+File0=Click_Tamper_config.h
+File1=Click_Tamper_types.h
+[PLDS]
+Count=1
+File0=Click_Tamper.pld
+
